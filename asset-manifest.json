@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/day-picker/static/css/main.31c8819c.css",
+    "main.js": "/day-picker/static/js/main.c532c2b4.js",
+    "index.html": "/day-picker/index.html",
+    "main.31c8819c.css.map": "/day-picker/static/css/main.31c8819c.css.map",
+    "main.c532c2b4.js.map": "/day-picker/static/js/main.c532c2b4.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.31c8819c.css",
+    "static/js/main.c532c2b4.js"
+  ]
+}
