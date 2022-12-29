@@ -9,7 +9,7 @@
  */
 
 
-export const cylinder = (() => {
+export const gradients = (() => {
   let element = "0deg"
   let shadow = "0deg"
   
