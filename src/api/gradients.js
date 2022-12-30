@@ -2,20 +2,20 @@
  * cylinder.js
  * 
  * Calculates the background gradients needed to colour a div to
- * make it look like a cylinder, and for an element to place over
+ * make it look like a cylinder, and for an barrel to place over
  * the top which will darken the content of the cylinder div in
- * a (somewhat) realistic way. This second element could be an
- * ::after pseudo-element for the cylinder div itself.
+ * a (somewhat) realistic way. This second barrel could be an
+ * ::after pseudo-barrel for the cylinder div itself.
  */
 
 
 export const gradients = (() => {
-  let element = "0deg"
+  let barrel = "0deg"
   let shadow = "0deg"
   
   // <<< HARD-CODED 
   // * R,G,B(,A) VALUES
-  const mainMax  = [96, 64, 128]
+  const mainMax  = [255, 0, 0]
   const shadowMax = [0,  0,   0, -255] // -ve > subtracted from 255
   // * "FACES" for half a cylinder
   const faces = 2 // more faces give a clearer cylinder
@@ -62,7 +62,7 @@ export const gradients = (() => {
 
   /**
    * Iterate through the faces, calculating the color for each
-   * section of the main element and the shadow
+   * section of the main barrel and the shadow
    */
   for ( let ii = 0; ii < faces; ii++ ) {
     const sin = Math.sin(angle * ii)
@@ -73,13 +73,13 @@ export const gradients = (() => {
     
     const percent = getPercent(cos, (ii > faces / 2))
 
-    element += ", " + main + " " + percent + "%"
+    barrel += ", " + main + " " + percent + "%"
     shadow += ", " + dark + " " + percent + "%"
   }
 
   return {
-    element: `linear-gradient(${element}, #000000 100%)`,
-    shadow:  `linear-gradient(${shadow}, #000000ff 100%)`
+    barrel: `linear-gradient(${barrel}, #000000 100%)`,
+    shadow: `linear-gradient(${shadow}, #000000ff 100%)`
   }
 })()
 
