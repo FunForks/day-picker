@@ -123,11 +123,11 @@ function App() {
         return [
           {
             role: "weekdays",
-            textAlign: weekAlign,
+            textAlign: weekAlign
           },
           {
             role: "hours",
-            textAlign: "right",
+            textAlign: "right"
           },
           {
             role: "minutes",

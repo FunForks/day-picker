@@ -89,6 +89,17 @@ const TimePicker = (props) => {
   useEffect(setWeekdayNames, [locale, weekday])
 
 
+  // Minutes
+  const [ minutes, setMinutes ] = useState(
+    () => getMinutes(everyNMinutes)
+  )
+  const setMinuteArray = () => {
+    const minutes = getMinutes(everyNMinutes)
+    setMinutes(minutes)
+  }
+  useEffect(setMinuteArray, [everyNMinutes])
+
+
   // Optimize widths
   const [ barrelWidths, setBarrelWidths ] = useState([])
   const barrelRef = useRef()
@@ -134,7 +145,7 @@ const TimePicker = (props) => {
     }, 100)
   }
 
-  // useEffect(cycleThroughDays)
+  useEffect(cycleThroughDays)
 
 
   // Setup
@@ -161,7 +172,7 @@ const TimePicker = (props) => {
         props.offset = -sharedProps.offset
         break
       case "minutes":
-        items = getMinutes(everyNMinutes) // props.everyNMinutes
+        items = minutes
         break
       default:
     }
@@ -392,8 +403,6 @@ const sanitize = (props) => {
     display,
     everyNMinutes
   }
-
-  // console.log("props AFTER:", props);
   
 
   return props

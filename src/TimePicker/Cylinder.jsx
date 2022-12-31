@@ -14,19 +14,15 @@ import React, {
 
 
 export const Cylinder = forwardRef((props, ref) => {
-  // offset and items will change on a regular basis. There is no
-  // need to sanitize all the props just for them. Treat these
-  // two together...
-  const [ itemOffset, setItemOffset ] = useState(
-    () => sanitizeItemOffsetAndSpacing(props)
+  // offset will change on a regular basis. There is no need
+  // to sanitize all the props just for this. Treat it on its own...
+  const [ offset, setOffset ] = useState(
+    () => sanitizeOffset(props)
   )
-  const reviewItemOffset = () => {
-    setItemOffset(quickReview(props))
+  const reviewOffset = () => {
+    setOffset(sanitizeOffset(props))
   }
-  const offsetDependencies = ["items", "offset", "spacing"].map(
-    prop => props[prop]
-  )
-  useEffect(reviewItemOffset, offsetDependencies)
+  useEffect(reviewOffset, [props.offset])
 
   // ... and treat the other props separately
   const [ cleanProps, setCleanProps ] = useState(
@@ -34,32 +30,25 @@ export const Cylinder = forwardRef((props, ref) => {
   )
   const keys = Object.keys(props)
   keys.splice(keys.indexOf("offset"), 1)
-  keys.splice(keys.indexOf("items"), 1)
+  const dependencies = keys.map(prop => props[prop])
   const reviewNewProps = () => {
     setCleanProps(sanitizeOthers(props))
   }
-  const dependencies = keys.map(prop => props[prop])
   useEffect(reviewNewProps, dependencies)
   // End of sanitization and useEffect treatment
 
 
   const {
     // essential
-    items,       // array of strings to wrap around the cylinder
+    items,     // array of strings to wrap around the cylinder
     // defaults provided
-    offset,      // floating-point number
-    spacing,     // floating-point number ≥ 3
-  } = itemOffset
-
-
-  const {
-    // defaults provided
-    radius,      // CSS length, e.g.: 2em
-    gradients,   // { barrel: <linear gradient>, shadow: <also> }
-    width,       // CSS length, e.g.: 29px (missing on first render)
-    textAlign,   // "left", "right", "center" (defaults to inherit)
-    padding,     // CSS length
-    fontSize     // CSS length, e.g.: 4vmin
+    spacing,   // floating-point number ≥ 2
+    radius,    // CSS length, e.g.: 2em
+    gradients, // { barrel: <linear gradient>, shadow: <also> }
+    width,     // CSS length, e.g.: 29px (missing on first render)
+    textAlign, // "left", "right", "center" (defaults to inherit)
+    padding,   // CSS length
+    fontSize   // CSS length, e.g.: 4vmin
   } = cleanProps
 
 
@@ -153,7 +142,7 @@ export const Cylinder = forwardRef((props, ref) => {
         "--height": `calc(${radius} * 2 * ${fontSize})`,
         "--margin": "0 0.05em",
         position: "relative",
-        overflowY: "hidden" // hides ascenders and
+        overflowY: "hidden" // hides ascenders and descenders
       }}
     >
 
@@ -229,16 +218,52 @@ const isValidCSSLength = (string) => {
 
 
 
-const sanitizeItemOffsetAndSpacing = (props) => {
+const sanitizeOffset = (props) => {
   let {
-      // essential
+    items,  // array of strings to wrap around the cylinder
+    offset  // positive floating-point number
+  } = props
+
+  const length = items.length
+
+  if (isNaN(offset)) {
+    offset = 0
+
+  } else if (length > 1) {
+    while (offset < 0) {
+      // Work only with positive offsets
+      offset += length
+    }
+
+  } else {
+    // If there is only one item, don't let it rotate
+    offset = 0
+  }
+
+  return offset
+}
+
+
+
+const sanitizeOthers = (props) => {
+  let {
     items,       // array of strings to wrap around the cylinder
-    offset,      // floating-point number
-    spacing,     // floating-point number ≥ 3
+    spacing,     // floating-point number ≥ 2
+
+    radius,      // CSS length, e.g.: 2em
+    gradients,   // { barrel: <linear gradient>, shadow: <also> }
+    fontSize,    // CSS length, e.g.: 4vmin
+
+    // // The browser will tolerate invalid values for the following:
+    // width,    // CSS length, e.g.: 29px (missing on first render)
+    // textAlign,// "left", "right", "center" (defaults to inherit)
+    // padding,  // CSS length
   } = props
 
 
   const defaultValues = {
+    radius: 1,
+    fontSize: "1em",
     items: ["items", "array", "of" ,"strings", "- missing -"],
     spacing: 8.5
   }
@@ -248,6 +273,7 @@ const sanitizeItemOffsetAndSpacing = (props) => {
   // * the current value, full size
   // * the next value, squished but readable
   // * a slither
+
 
   if (!Array.isArray(items) || !items.length) {
     items = defaultValues.items
@@ -271,84 +297,6 @@ const sanitizeItemOffsetAndSpacing = (props) => {
     }
   }
 
-  if (isNaN(offset)) {
-    offset = 0
-
-  } else if (items.length > 1) {
-    while (offset < 0) {
-      // Work only with positive offsets
-      offset += items.length
-    }
-
-  } else {
-    // If there is only one item, don't let it rotate
-    offset = 0
-  }
-
-  props = {
-    ...props,
-    items,
-    spacing,
-    offset
-  }
-
-  return props
-}
-
-
-
-const quickReview = (props) => {
-  let { offset, items, spacing } = props
-
-  const length = items.length
-  if (length === 1) {
-    // offset will be blocked at 0
-    spacing = 2
-
-  } else {
-    spacing = Math.max(3, Math.min(spacing, length * 2))
-  }
-
-  if (length > 1) {
-    while (offset < 0) {
-      // Work only with positive offsets
-      offset += items.length
-    }
-
-  } else {
-    // If there is only one item, don't let it rotate
-    offset = 0
-  }
-
-  props = {
-    ...props,
-    offset,
-    spacing
-  }
-
-  return props
-}
-
-
-
-const sanitizeOthers = (props) => {
-  let {
-    radius,      // CSS length, e.g.: 2em
-    gradients,   // { barrel: <linear gradient>, shadow: <also> }
-    fontSize,    // CSS length, e.g.: 4vmin
-
-    // // The browser will tolerate invalid values for the following:
-    // width,    // CSS length, e.g.: 29px (missing on first render)
-    // textAlign,// "left", "right", "center" (defaults to inherit)
-    // padding,  // CSS length
-  } = props
-
-
-  const defaultValues = {
-    radius: 1,
-    fontSize: "1em",
-  }
-
   if (isNaN(radius) || radius < 1) {
     radius = defaultValues.radius
     console.log(`Cylinder: radius set by default to ${radius}`)
@@ -366,6 +314,8 @@ const sanitizeOthers = (props) => {
 
   props = {
     ...props,
+    items,
+    spacing,
     radius,
     gradients,
     fontSize
