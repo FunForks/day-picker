@@ -1,13 +1,12 @@
 /**
- * Cylinder.jsx
- *
- * Creates the effect of a rotating cylinder, with the given items
- * wrapped around it, as if on a band.
+ * 
  */
 
 
 
-import React, { forwardRef} from 'react';
+import React, {
+  forwardRef
+} from 'react';
 
 
 
@@ -19,12 +18,10 @@ export const Cylinder = forwardRef(({
   offset,      // floating-point number
   spacing,     // floating-point number ≥ 3
   gradients,   // { barrel: <linear gradient>, shadow: <also> }
-  heightTweak, // 2.1 or greater, to allow for asc~ and descenders
-               // (may depend on language and font)
-  // optional
   width,       // CSS length, e.g.: 29px (missing on first render)
   textAlign,   // "left", "right", "center" (defaults to inherit)
   padding,     // CSS length
+  fontSize     // CSS length, e.g.: 4vmin
 }, ref) => {
 
   // <<< Provide defaults
@@ -36,15 +33,19 @@ export const Cylinder = forwardRef(({
   }
   if (isNaN(offset)) {
     offset = 0
+  } else {
+    while (offset < 0) {
+      offset += items.length
+    }
   }
   if (isNaN(spacing)) {
     spacing = Math.max(7, Math.min(3, items.length))
   }
-  if (!heightTweak) {
-    heightTweak = 2
-  }
   if (typeof gradients !== "object") {
     gradients = {}
+  }
+  if (typeof fontSize !== "string") {
+    fontSize = "1em"
   }
   // Provide defaults >>>
 
@@ -112,6 +113,7 @@ export const Cylinder = forwardRef(({
           boxSizing: "border-box",
           whiteSpace: "nowrap",
           textAlign,
+          fontSize,
 
           // Tweak for compatibility with Thai fonts
           padding: (padding || "0 0.1em"),
@@ -131,15 +133,14 @@ export const Cylinder = forwardRef(({
   })
 
 
-  // The height of the gradients div needs to be a bit more than
-  // twice the radius used by the paragraphs, to allow for
-  // descenders (g, j, p, q, y). Hence heightTweak below.
+
   return (
     <div
       style={{
-        "--height": `${radius * heightTweak}em`,
+        "--height": `calc(${radius} * 2 * ${fontSize})`,
         "--margin": "0 0.05em",
-        position: "relative"
+        position: "relative",
+        overflowY: "hidden" // hides ascenders and
       }}
     >
 
