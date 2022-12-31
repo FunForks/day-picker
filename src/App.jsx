@@ -7,13 +7,24 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import TimePicker from './TimePicker'
 
 
+let renders = 0
 
 function App() {
+  console.log("App renders:", ++renders);
+
+
+  const displays = {
+    "days": "Days",
+    "h&m": "Time",
+    "all": "All",
+    "": "Default"
+  }
+
   const locales = {
     "ar": "اللغة العربية",
     "de": "Deutsch",
@@ -22,7 +33,7 @@ function App() {
     "ru": "Русский",
     "th": "ภาษาไทย",
     "zh": "中文",
-    undefined: "Default"
+    "": "Default"
   }
 
   const colors = {
@@ -31,14 +42,14 @@ function App() {
     "#00f": "Blue",
     "#333": "Black",
     "#eee": "White",
-    undefined: "Default"
+    "": "Default"
   }
 
   const sizes = {
     "long": "Long",
     "short": "Short",
     "narrow": "Narrow",
-    undefined: "Default"
+    "": "Default"
   }
 
   const radii = {
@@ -47,68 +58,121 @@ function App() {
     "1.5": "1.5",
     "2.0": "2",
     "3.0": "3",
-    undefined: "Default"
+    "": "Default"
   }
 
   const alignments = {
     "left": "Left",
     "center": "Center",
     "right": "Right",
-    undefined: "Default"
+    "": "Default"
   }
 
   const nMinutes = {
-    1: "1",
-    5: "5",
-    10: "10",
-    15: "15"
+    1: "1m",
+    2: "2m",
+    3: "3m",
+    4: "4m",
+    5: "5m",
+    6: "6m",
+    10: "10m",
+    12: "12m",
+    15: "15m",
+    20: "20m",
+    30: "30m",
+    60: "00",
+    "": "Default"
   }
 
+  const [ display, setDisplay ]     = useState("")
+  const [ locale, setLocale ]       = useState("")
+  const [ bgColor, setBgColor ]     = useState("")
+  const [ weekday, setWeekday ]     = useState("")
+  const [ radius, setRadius ]       = useState("")
+  const [ weekAlign, setWeekAlign ] = useState("")
+  const [ everyNMinutes, setEveryNMinutes ] = useState("")
 
-  const [ locale, setLocale ]       = useState("ru")
-  const [ bgColor, setBgColor ]     = useState("#333")
-  const [ weekday, setWeekday ]     = useState("long")
-  const [ radius, setRadius ]       = useState(1.25)
-  const [ weekAlign, setWeekAlign ] = useState("center")
-  
+  const [ fontSize, setFontSize ] = useState("9vmin")
 
 
-  const display = [
-    {
-      role: "weekdays",
-      textAlign: "right",
-    },
-    {
-      role: "hours",
-      textAlign: "right",
-    },
-    {
-      role: "minutes",
-      textAlign: "left",
-      everyNMinutes: 5
+
+  const items = (() => {
+    switch (display) {
+      case "days":
+        return [
+          {
+            role: "weekdays",
+            textAlign: weekAlign,
+          }
+        ]
+
+      case "h&m":
+        return [
+          {
+            role: "hours",
+            textAlign: "right",
+          },
+          {
+            role: "minutes",
+            textAlign: "left",
+            everyNMinutes: everyNMinutes
+          }
+        ]
+
+      case "all":
+        return [
+          {
+            role: "weekdays",
+            textAlign: weekAlign,
+          },
+          {
+            role: "hours",
+            textAlign: "right",
+          },
+          {
+            role: "minutes",
+            textAlign: "left",
+            everyNMinutes: everyNMinutes
+          }
+        ]
+
+      default:
     }
-  ]
+  })()
+
 
 
   return (
     <>
       <TimePicker
+        // Selectors
         locale={locale}
         bgColor={bgColor}
         weekday={weekday}
         weekAlign={weekAlign}
+        everyNMinutes={everyNMinutes}
+        // Sliders
         radius={radius}
+        spacing={8}
+        fontSize={fontSize}
 
-        spacing={7}
-        fontSize="9vmin"
-        display={display}
+        // Cylinders to show
+        display={items}
       />
 
       <Toolbar
         children={[
           <Selector
+            key="display"
+            attribute="Display"
+            options={displays}
+            value={display}
+            setValue={setDisplay}
+          />,
+
+          <Selector
             key="locales"
-            attribute="Locales"
+            attribute="Locale"
             options={locales}
             value={locale}
             setValue={setLocale}
@@ -124,7 +188,7 @@ function App() {
 
           <Selector
             key="align"
-            attribute="Align"
+            attribute="Align days"
             options={alignments}
             value={weekAlign}
             setValue={setWeekAlign}
@@ -140,10 +204,18 @@ function App() {
 
           <Selector
             key="colors"
-            attribute="Colours"
+            attribute="Colour"
             options={colors}
             value={bgColor}
             setValue={setBgColor}
+          />,
+
+          <Selector
+            key="precision"
+            attribute="Precision"
+            options={nMinutes}
+            value={everyNMinutes}
+            setValue={setEveryNMinutes}
           />
         ]}
       />
@@ -175,13 +247,36 @@ const Toolbar = ({ children }) => {
 
 
 const Selector = ({ attribute, options, value, setValue }) => {
+  const treatChange = (event) => {
+    let value = event.target.value
+
+    if (!value || value === "undefined") {
+      value = undefined
+
+    } else if (Number(value) == value) {
+      // Use an actual number, when possible
+      value = Number(value)
+    }
+
+    console.log(`Setting ${attribute} value:`, value);
+
+    setValue(value)
+  }
+
+
   options = Object.entries(options).map( item => {
-    const [ value, display ] = item
+    let [ value, display ] = item
+    const index = display.indexOf("*")
+    const disabled = index >= 0
+    if (disabled) {
+      display = display.slice(0, index)
+    }
 
     return (
       <option
         key={value}
         value={value}
+        disabled={disabled}
         style={{
           fontSize: "inherit"
         }}
@@ -190,6 +285,7 @@ const Selector = ({ attribute, options, value, setValue }) => {
       </option>
     )
   })
+
 
   return (
     <label>
@@ -202,7 +298,7 @@ const Selector = ({ attribute, options, value, setValue }) => {
       </span>
       <select
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={treatChange}
         style={{
           backgroundColor: "#222",
           color: "#fff",

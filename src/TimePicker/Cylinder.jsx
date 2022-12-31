@@ -1,53 +1,66 @@
 /**
- * 
+ *
  */
 
 
 
 import React, {
+  useState,
+  useEffect,
   forwardRef
 } from 'react';
 
 
 
-export const Cylinder = forwardRef(({
-  // essential
-  items,       // array of strings to wrap around the cylinder
-  // defaults provided
-  radius,      // CSS length, e.g.: 2em
-  offset,      // floating-point number
-  spacing,     // floating-point number ≥ 3
-  gradients,   // { barrel: <linear gradient>, shadow: <also> }
-  width,       // CSS length, e.g.: 29px (missing on first render)
-  textAlign,   // "left", "right", "center" (defaults to inherit)
-  padding,     // CSS length
-  fontSize     // CSS length, e.g.: 4vmin
-}, ref) => {
 
-  // <<< Provide defaults
-  if (!Array.isArray(items)) {
-    items = ["items", "array", "of" ,"strings", "- missing -"]
+export const Cylinder = forwardRef((props, ref) => {
+  // offset and items will change on a regular basis. There is no
+  // need to sanitize all the props just for them. Treat these
+  // two together...
+  const [ itemOffset, setItemOffset ] = useState(
+    () => sanitizeItemOffsetAndSpacing(props)
+  )
+  const reviewItemOffset = () => {
+    setItemOffset(quickReview(props))
   }
-  if (isNaN(radius)) {
-    radius = 1
+  const offsetDependencies = ["items", "offset", "spacing"].map(
+    prop => props[prop]
+  )
+  useEffect(reviewItemOffset, offsetDependencies)
+
+  // ... and treat the other props separately
+  const [ cleanProps, setCleanProps ] = useState(
+    () => sanitizeOthers(props)
+  )
+  const keys = Object.keys(props)
+  keys.splice(keys.indexOf("offset"), 1)
+  keys.splice(keys.indexOf("items"), 1)
+  const reviewNewProps = () => {
+    setCleanProps(sanitizeOthers(props))
   }
-  if (isNaN(offset)) {
-    offset = 0
-  } else {
-    while (offset < 0) {
-      offset += items.length
-    }
-  }
-  if (isNaN(spacing)) {
-    spacing = Math.max(7, Math.min(3, items.length))
-  }
-  if (typeof gradients !== "object") {
-    gradients = {}
-  }
-  if (typeof fontSize !== "string") {
-    fontSize = "1em"
-  }
-  // Provide defaults >>>
+  const dependencies = keys.map(prop => props[prop])
+  useEffect(reviewNewProps, dependencies)
+  // End of sanitization and useEffect treatment
+
+
+  const {
+    // essential
+    items,       // array of strings to wrap around the cylinder
+    // defaults provided
+    offset,      // floating-point number
+    spacing,     // floating-point number ≥ 3
+  } = itemOffset
+
+
+  const {
+    // defaults provided
+    radius,      // CSS length, e.g.: 2em
+    gradients,   // { barrel: <linear gradient>, shadow: <also> }
+    width,       // CSS length, e.g.: 29px (missing on first render)
+    textAlign,   // "left", "right", "center" (defaults to inherit)
+    padding,     // CSS length
+    fontSize     // CSS length, e.g.: 4vmin
+  } = cleanProps
 
 
   const angle = Math.PI * 2 / spacing
@@ -73,8 +86,8 @@ export const Cylinder = forwardRef(({
 
   let startSlice = counter - before
   const sliceEnd = startSlice + total
-  let seen = []
 
+  let seen = []
   if (startSlice < 0) {
     // Add some items wrapped from the end
     seen = items.slice(startSlice)
@@ -174,3 +187,189 @@ export const Cylinder = forwardRef(({
     </div>
   );
 })
+
+
+
+
+// UTILITIES // UTILITIES // UTILITIES // UTILITIES // UTILITIES //
+
+const units = ["cm", "mm", "in", "pc", "pt", "px", "em", "ex", "ch", "rem", "vw", "vh", "vmin", "vmax"]
+const regexString = units.reduce(( regex, unit ) => (
+  `${regex}|${unit}`
+))
+const unitRegex = new RegExp(`^([0-9.]+)(${regexString})$`, "i")
+
+const isValidCSSLength = (string) => {
+  if (typeof string !== "string") {
+    return false
+
+  }
+
+  const match = unitRegex.exec(string)
+
+  if (match) {
+    // The units are valid ....
+    const number = match[1]
+    if (number.indexOf(".") !== number.lastIndexOf(".")) {
+      // ... but there is more than one decimal point
+      return false
+
+    } else if (number === ".") {
+      // ... but there is no actual number
+      return false
+    }
+
+  } else {
+    // No valid units, or no number
+    return false
+  }
+
+  return true
+}
+
+
+
+const sanitizeItemOffsetAndSpacing = (props) => {
+  let {
+      // essential
+    items,       // array of strings to wrap around the cylinder
+    offset,      // floating-point number
+    spacing,     // floating-point number ≥ 3
+  } = props
+
+
+  const defaultValues = {
+    items: ["items", "array", "of" ,"strings", "- missing -"],
+    spacing: 8.5
+  }
+  // A spacing of just over 8 will show:
+  // * a slither
+  // * the previous value, squished but readable
+  // * the current value, full size
+  // * the next value, squished but readable
+  // * a slither
+
+  if (!Array.isArray(items) || !items.length) {
+    items = defaultValues.items
+    console.log(`Cylinder: items array missing, using placeholder`)
+    spacing = 6
+
+  } else {
+    const length = items.length
+    if (isNaN(spacing)) {
+      spacing = Math.max(
+        2, Math.min(defaultValues.spacing, length * 2)
+      )
+      console.log(`Cylinder: spacing set by default to ${spacing}`)
+
+    } else if (length === 1) {
+      // offset will be blocked at 0
+      spacing = 2
+
+    } else {
+      spacing = Math.max(3, Math.min(spacing, length * 2))
+    }
+  }
+
+  if (isNaN(offset)) {
+    offset = 0
+
+  } else if (items.length > 1) {
+    while (offset < 0) {
+      // Work only with positive offsets
+      offset += items.length
+    }
+
+  } else {
+    // If there is only one item, don't let it rotate
+    offset = 0
+  }
+
+  props = {
+    ...props,
+    items,
+    spacing,
+    offset
+  }
+
+  return props
+}
+
+
+
+const quickReview = (props) => {
+  let { offset, items, spacing } = props
+
+  const length = items.length
+  if (length === 1) {
+    // offset will be blocked at 0
+    spacing = 2
+
+  } else {
+    spacing = Math.max(3, Math.min(spacing, length * 2))
+  }
+
+  if (length > 1) {
+    while (offset < 0) {
+      // Work only with positive offsets
+      offset += items.length
+    }
+
+  } else {
+    // If there is only one item, don't let it rotate
+    offset = 0
+  }
+
+  props = {
+    ...props,
+    offset,
+    spacing
+  }
+
+  return props
+}
+
+
+
+const sanitizeOthers = (props) => {
+  let {
+    radius,      // CSS length, e.g.: 2em
+    gradients,   // { barrel: <linear gradient>, shadow: <also> }
+    fontSize,    // CSS length, e.g.: 4vmin
+
+    // // The browser will tolerate invalid values for the following:
+    // width,    // CSS length, e.g.: 29px (missing on first render)
+    // textAlign,// "left", "right", "center" (defaults to inherit)
+    // padding,  // CSS length
+  } = props
+
+
+  const defaultValues = {
+    radius: 1,
+    fontSize: "1em",
+  }
+
+  if (isNaN(radius) || radius < 1) {
+    radius = defaultValues.radius
+    console.log(`Cylinder: radius set by default to ${radius}`)
+  }
+
+  if (typeof gradients !== "object") {
+    gradients = {}
+    console.log(`Cylinder: no gradients. Default shading will be used`)
+  }
+
+  if (!isValidCSSLength(fontSize)) {
+    fontSize = defaultValues.fontSize
+    console.log(`Cylinder: fontSize set by default to ${fontSize}`)
+  }
+
+  props = {
+    ...props,
+    radius,
+    gradients,
+    fontSize
+  }
+
+  return props
+}

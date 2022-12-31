@@ -10,11 +10,7 @@
 
 
 
-export const getGradients = (bgColor, shadowColor, faces, skip) => {
-  if (skip) {
-    return
-  }
-  
+export const getGradients = (bgColor, shadowColor, faces) => {
   // Apply defaults if necessary
   const defaultColors = {
     bg: [128, 128, 128],

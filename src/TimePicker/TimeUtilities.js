@@ -1,6 +1,6 @@
 /**
  * TimeUtilities.js
- * 
+ *
  * Functions to generate the contents of the different TimePicker
  * barrels.
  */
@@ -10,11 +10,7 @@
 /**
  * Create an array of localized weekday names, starting with today
  */
-export const getWeekdayNames = (locale, format, skip) => {
-  if (skip) {
-    return
-  }
-
+export const getWeekdayNames = (locale, format) => {
   let date       = new Date()
   const msInDay  = 24 * 60 * 60 * 1000
 
