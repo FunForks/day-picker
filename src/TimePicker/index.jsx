@@ -60,7 +60,7 @@ const TimePicker = (props) => {
     spacing,      // number of items per cycle
     fontSize,     // CSS length
     display,      // array of barrels to show
-    everyNMinutes // read in from display[ { role: minutes, ... }]
+    minutesInterval // read in from display[ { role: minutes, ... }]
   } = cleanProps
     
 
@@ -89,26 +89,23 @@ const TimePicker = (props) => {
 
   // Minutes
   const [ minutes, setMinutes ] = useState(
-    () => getMinutes(everyNMinutes)
+    () => getMinutes(minutesInterval)
   )
   const setMinuteArray = () => {
-    const minutes = getMinutes(everyNMinutes)
+    const minutes = getMinutes(minutesInterval)
     setMinutes(minutes)
   }
-  useEffect(setMinuteArray, [everyNMinutes])
+  useEffect(setMinuteArray, [minutesInterval])
 
+  // Rotate for testing!
+  // const [ offset, setOffset ] = useState(0)
 
-  // Rotate!
-  const [ offset, setOffset ] = useState(0)
-
-  const cycle = () => {
-    const newOffset = (offset + 0.1)
-
-    setTimeout(() => {
-      setOffset(newOffset)
-    }, 100)
-  }
-
+  // const cycle = () => {
+  //   const newOffset = (offset + 0.1)
+  //   setTimeout(() => {
+  //     setOffset(newOffset)
+  //   }, 100)
+  // }
   // useEffect(cycle)
 
 
@@ -116,7 +113,7 @@ const TimePicker = (props) => {
   const sharedProps  = {
     radius,
     gradients,
-    offset,
+    // offset, // only needed for testing
     spacing,
     fontSize
   }
@@ -175,11 +172,11 @@ export default TimePicker;
  */
 const sanitize = (props) => {
   let {
-    locale,       // ISO code, such as "en"
-    weekday,      // long, short, narrow
-    weekAlign,    // left, center, right
-    display,      // array of barrels to show
-    everyNMinutes // divisor of 60
+    locale,         // ISO code, such as "en"
+    weekday,        // long, short, narrow
+    weekAlign,      // left, center, right
+    display,        // array of barrels to show
+    minutesInterval // divisor of 60
 
     // // Sanitized in Cylinder.jsx
     // radius,      // numerical 'em' value
@@ -189,6 +186,8 @@ const sanitize = (props) => {
     // // Sanitized in ColorUtilities.js
     // bgColor,     // color for barrel
     // shadowColor, // color for shadow
+    // hoverColor,  // color for hover hilite
+    // pressColor,  // color for pressed hilite
     // faces,       // integer linear-gradient stopping points
   } = props
     
@@ -198,7 +197,7 @@ const sanitize = (props) => {
     weekday: "long",
     display: [ "weekdays", "hours", "minutes" ],
     weekAlign: "center",
-    everyNMinutes: 1
+    minutesInterval: 1
   }
 
   // Acceptable values
@@ -209,8 +208,9 @@ const sanitize = (props) => {
   const allowedKeys = [
     "role",
     "textAlign",
-    "everyNMinutes",
-    "padding"
+    "minutesInterval",
+    "padding",
+    "spacing"
   ]
   
 
@@ -264,31 +264,34 @@ const sanitize = (props) => {
   display = display.map( item => {
     item = {...item}
 
-    let { role, everyNMinutes: everyN, textAlign } = item
+    let { role, minutesInterval: minInt, textAlign } = item
 
     // role must be valid, or entire object will be refused
     if (roles.indexOf(role) < 0) {
       return null
     }
     
-    // use default value for everyNMinutes, if minutes is invalid
+    // use default value for minutesInterval, if minutes is invalid
     if (role === "minutes") {
-      if (!everyNMinutes || isNaN(everyNMinutes) || 60 % everyNMinutes) {
-        everyNMinutes = false
+      if ( !minutesInterval
+        || isNaN(minutesInterval)
+        || 60 % minutesInterval
+         ) {
+        minutesInterval = false
       }
 
-      if (!everyN || isNaN(everyN) || 60 % everyN) {
-        if (everyNMinutes) {
-          everyN = everyNMinutes
+      if (!minInt || isNaN(minInt) || 60 % minInt) {
+        if (minutesInterval) {
+          minInt = minutesInterval
 
         } else {
-          everyN = defaultValues.everyNMinutes
-          console.log(`TimePicker: everyNMinutes set by default to ${everyN}`)
+          minInt = defaultValues.minutesInterval
+          console.log(`TimePicker: minutesInterval set by default to ${minInt}`)
         }
       }
 
       // Promote to the top level of props, for useEffect
-      everyNMinutes = item.everyNMinutes = everyN
+      minutesInterval = item.minutesInterval = minInt
     }
     
     if (role === "weekdays") {
@@ -363,7 +366,7 @@ const sanitize = (props) => {
     weekday,
     weekAlign,
     display,
-    everyNMinutes
+    minutesInterval
   }
   
 

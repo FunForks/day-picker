@@ -28,8 +28,16 @@ export const Cylinder = (props) => {
   const [ cleanProps, setCleanProps ] = useState(
     () => sanitizeOthers(props)
   )
-  const keys = Object.keys(props)
-  keys.splice(keys.indexOf("offset"), 1)
+  const keys = [ // not including "offset"
+    "fontSize",
+    "gradients",
+    "items",
+    "padding",
+    "radius",
+    "role",
+    "spacing",
+    "textAlign"
+  ]
   const dependencies = keys.map(prop => props[prop])
   const reviewNewProps = () => {
     setCleanProps(sanitizeOthers(props))
@@ -292,7 +300,6 @@ const sanitizeOthers = (props) => {
     fontSize,    // CSS length, e.g.: 4vmin
 
     // // The browser will tolerate invalid values for the following:
-    // width,    // CSS length, e.g.: 29px (missing on first render)
     // textAlign,// "left", "right", "center" (defaults to inherit)
     // padding,  // CSS length
   } = props
@@ -302,9 +309,9 @@ const sanitizeOthers = (props) => {
     radius: 1.5,
     fontSize: "1em",
     items: ["items", "array", "of" ,"strings", "- missing -"],
-    spacing: 8.5
+    spacing: 7
   }
-  // A spacing of just over 8 will show:
+  // A spacing of just over 9 will show:
   // * a slither
   // * the previous value, squished but readable
   // * the current value, full size
@@ -319,7 +326,7 @@ const sanitizeOthers = (props) => {
 
   } else {
     const length = items.length
-    if (isNaN(spacing)) {
+    if (!spacing || isNaN(spacing)) {
       spacing = Math.max(
         2, Math.min(defaultValues.spacing, length * 2)
       )
