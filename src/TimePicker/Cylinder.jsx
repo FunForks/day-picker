@@ -58,7 +58,7 @@ export const Cylinder = forwardRef((props, ref) => {
     const width = getWidthOf(items, fontSize, padding)
     setWidth(width)
   }
-  useEffect(setBarrelWidth, [items, fontSize])
+  useEffect(setBarrelWidth, [items, fontSize, padding])
 
 
   const angle = Math.PI * 2 / spacing
@@ -360,5 +360,5 @@ const getWidthOf = (items, fontSize, padding) => {
   const width = div.scrollWidth
   div.remove()
 
-  return width * 1.07 // HACK: IS THIS FUDGE FOR THE THAI PADDING?
+  return width * 1.1 // HACK: IS THIS FUDGE FOR THE THAI PADDING?
 }
