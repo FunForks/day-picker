@@ -61,6 +61,10 @@ export const Cylinder = (props) => {
   useEffect(setBarrelWidth, [items, fontSize, padding])
 
 
+  // Prevent a double-click on a control from scrolling twice
+  const [ busy, setBusy ] = useState(false)
+
+
   const angle = Math.PI * 2 / spacing
 
   // Determine which chunk of items could be visible, and what
@@ -192,6 +196,8 @@ export const Cylinder = (props) => {
         gradients={[gradients.topLite, gradients.topPress]}
         offset={offset}
         setOffset={setOffset}
+        busy={busy}
+        setBusy={setBusy}
       />
       <Hilite
         itemCount={items.length}
@@ -200,6 +206,8 @@ export const Cylinder = (props) => {
         gradients={[gradients.lowLite, gradients.lowPress]}
         offset={offset}
         setOffset={setOffset}
+        busy={busy}
+        setBusy={setBusy}
       />
     </div>
   );
