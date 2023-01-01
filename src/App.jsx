@@ -21,7 +21,7 @@ function App() {
   const displays = {
     "days": "Days",
     "h&m": "Time",
-    "all": "All",
+    "custom": "Custom",
     "": "Default"
   }
 
@@ -90,7 +90,9 @@ function App() {
   const [ weekday, setWeekday ]     = useState("")
   const [ radius, setRadius ]       = useState("")
   const [ weekAlign, setWeekAlign ] = useState("")
-  const [ everyNMinutes, setEveryNMinutes ] = useState("")
+  const [ minutesInterval, setminutesInterval ] = useState("")
+
+  const [ spacing, setSpacing ] = useState("")
 
   const [ fontSize, setFontSize ] = useState("9vmin")
 
@@ -115,24 +117,27 @@ function App() {
           {
             role: "minutes",
             textAlign: "left",
-            everyNMinutes: everyNMinutes
+            minutesInterval: minutesInterval
           }
         ]
 
-      case "all":
+      case "custom":
         return [
           {
-            role: "weekdays",
-            textAlign: weekAlign,
-          },
-          {
             role: "hours",
-            textAlign: "right"
+            textAlign: "right",
+            padding: "0 0 0 0.5em"
           },
           {
             role: "minutes",
             textAlign: "left",
-            everyNMinutes: everyNMinutes
+            minutesInterval: minutesInterval,
+            spacing: 10,
+            padding: "0 0.25em 0 0"
+          },{
+            role: "weekdays",
+            textAlign: (weekAlign || "left"),
+            spacing: 5
           }
         ]
 
@@ -150,10 +155,10 @@ function App() {
         bgColor={bgColor}
         weekday={weekday}
         weekAlign={weekAlign}
-        everyNMinutes={everyNMinutes}
+        minutesInterval={minutesInterval}
         // Sliders
         radius={radius}
-        spacing={8}
+        spacing={spacing}
         fontSize={fontSize}
 
         // Cylinders to show
@@ -214,8 +219,8 @@ function App() {
             key="precision"
             attribute="Precision"
             options={nMinutes}
-            value={everyNMinutes}
-            setValue={setEveryNMinutes}
+            value={minutesInterval}
+            setValue={setminutesInterval}
           />
         ]}
       />

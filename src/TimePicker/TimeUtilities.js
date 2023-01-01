@@ -31,11 +31,16 @@ export const hours = Array(24).fill().map((_, index) => (
 
 
 
-export const getMinutes = (everyNMinutes=5) => {
-  const total = 60 / everyNMinutes
+export const getMinutes = (minutesInterval=5) => {
+  if (!minutesInterval) {
+    // The minutes display is not requested
+    return ["nothing to see"]
+  }
+
+  const total = 60 / minutesInterval
 
   const minutes = Array(total).fill().map((_, index) => {
-    let value = index * everyNMinutes
+    let value = index * minutesInterval
     if (value < 10) {
       value = "0" + value
     }

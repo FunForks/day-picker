@@ -151,6 +151,12 @@ export const Hilite = ({
   })()
 
 
+  if (itemCount === 1) {
+    // No possible change, so no controller
+    return ""
+  }
+
+
   return (
     <div
       style={{
