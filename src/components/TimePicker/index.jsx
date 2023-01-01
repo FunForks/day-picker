@@ -50,17 +50,18 @@ const TimePicker = (props) => {
   useEffect(reviewNewProps, dependencies)
 
   const {
-    locale,       // ISO code, such as "en"
-    weekday,      // long, short, narrow
-    weekAlign,    // left, center, right
-    bgColor,      // color for barrel
-    shadowColor,  // color for shadow
-    faces,        // integer linear-gradient stopping points
-    radius,       // numerical 'em' value
-    spacing,      // number of items per cycle
-    fontSize,     // CSS length
-    display,      // array of barrels to show
-    minutesInterval // read in from display[ { role: minutes, ... }]
+    locale,          // ISO code, such as "en"
+    weekday,         // long, short, narrow
+    weekAlign,       // left, center, right
+    bgColor,         // color for barrel
+    shadowColor,     // color for shadow
+    faces,           // integer linear-gradient stopping points
+    radius,          // numerical 'em' value
+    spacing,         // number of items per cycle
+    fontSize,        // CSS length
+    display,         // array of barrels to show
+    minutesInterval, // read from display[ { role: minutes, ... }]
+    verbose
   } = cleanProps
     
 
@@ -115,7 +116,8 @@ const TimePicker = (props) => {
     gradients,
     // offset, // only needed for testing
     spacing,
-    fontSize
+    fontSize,
+    verbose
   }
 
   const cylinders = display.map(( props, index ) => {
@@ -176,7 +178,7 @@ const sanitize = (props) => {
     weekday,        // long, short, narrow
     weekAlign,      // left, center, right
     display,        // array of barrels to show
-    minutesInterval // divisor of 60
+    minutesInterval,// divisor of 60
 
     // // Sanitized in Cylinder.jsx
     // radius,      // numerical 'em' value
@@ -189,6 +191,8 @@ const sanitize = (props) => {
     // hoverColor,  // color for hover hilite
     // pressColor,  // color for pressed hilite
     // faces,       // integer linear-gradient stopping points
+
+    verbose         // if truthy, use of default values is logged
   } = props
     
 
@@ -210,7 +214,8 @@ const sanitize = (props) => {
     "textAlign",
     "minutesInterval",
     "padding",
-    "spacing"
+    "spacing",
+    "verbose"
   ]
   
 
@@ -219,20 +224,26 @@ const sanitize = (props) => {
    || isoCodes.indexOf(locale.slice(0,2).toLowerCase()) < 0
      ) {
     ({ locale } = defaultValues)
-    console.log(`TimePicker: locale set by default to "${locale}"`)
+    if (verbose) {
+      console.log(`TimePicker: locale set by default to "${locale}"`)
+    }
   }
 
 
   // weekday
   if ( typeof weekday !== "string") {
     ({ weekday } = defaultValues)
-    console.log(`TimePicker: weekday set by default to "${weekday}"`)
+    if (verbose) {   
+      console.log(`TimePicker: weekday set by default to "${weekday}"`)
+    }
   } else {
     weekday = weekday.toLowerCase()
 
     if (weekdayValues.indexOf(weekday) < 0) {
       ({ weekday } = defaultValues)
-      console.log(`TimePicker: weekday set by default to "${weekday}"`)
+      if (verbose) {   
+        console.log(`TimePicker: weekday set by default to "${weekday}"`)
+      }
     }
   }
 
@@ -286,7 +297,9 @@ const sanitize = (props) => {
 
         } else {
           minInt = defaultValues.minutesInterval
-          console.log(`TimePicker: minutesInterval set by default to ${minInt}`)
+          if (verbose) {   
+            console.log(`TimePicker: minutesInterval set by default to ${minInt}`)
+          }
         }
       }
 
@@ -304,7 +317,9 @@ const sanitize = (props) => {
         if (!weekAlign) {
           // Use the standard default...
           textAlign = defaultValues.weekAlign
-          console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+          if (verbose) {   
+            console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+          }
         } // ... otherwise use weekAlign
 
       } else {
@@ -316,7 +331,9 @@ const sanitize = (props) => {
 
           } else {
             textAlign = defaultValues.weekAlign
-            console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+            if (verbose) {   
+              console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+            }
           }
         }
       }

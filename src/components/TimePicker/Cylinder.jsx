@@ -55,7 +55,7 @@ export const Cylinder = (props) => {
     gradients, // { barrel: <linear gradient>, shadow: <also> }
     textAlign, // "left", "right", "center" (defaults to inherit)
     padding,   // CSS length
-    fontSize   // CSS length, e.g.: 4vmin
+    fontSize,  // CSS length, e.g.: 4vmin
   } = cleanProps
 
   // Optimal width
@@ -299,10 +299,14 @@ const sanitizeOthers = (props) => {
     gradients,   // { barrel: <linear gradient>, shadow: <also> }
     fontSize,    // CSS length, e.g.: 4vmin
 
+    role,
+    verbose      // if truthy, use of default values is logged
+
     // // The browser will tolerate invalid values for the following:
     // textAlign,// "left", "right", "center" (defaults to inherit)
     // padding,  // CSS length
   } = props
+  
 
 
   const defaultValues = {
@@ -321,8 +325,11 @@ const sanitizeOthers = (props) => {
 
   if (!Array.isArray(items) || !items.length) {
     items = defaultValues.items
-    console.log(`Cylinder: items array missing, using placeholder`)
     spacing = 6
+
+    if (verbose) {   
+      console.log(`Cylinder "${role}": items array missing, using placeholder`)
+    }
 
   } else {
     const length = items.length
@@ -330,7 +337,9 @@ const sanitizeOthers = (props) => {
       spacing = Math.max(
         2, Math.min(defaultValues.spacing, length * 2)
       )
-      console.log(`Cylinder: spacing set by default to ${spacing}`)
+      if (verbose) {   
+        console.log(`Cylinder "${role}": spacing set by default to ${spacing}`)
+      }
 
     } else if (length === 1) {
       // offset will be blocked at 0
@@ -343,17 +352,23 @@ const sanitizeOthers = (props) => {
 
   if (isNaN(radius) || radius < 1) {
     radius = defaultValues.radius
-    console.log(`Cylinder: radius set by default to ${radius}`)
+    if (verbose) {
+      console.log(`Cylinder "${role}": radius set by default to ${radius}`)
+    }
   }
 
   if (typeof gradients !== "object") {
     gradients = {}
-    console.log(`Cylinder: no gradients. Default shading will be used`)
+    if (verbose) {   
+      console.log(`Cylinder "${role}": no gradients. Default shading will be used`)
+    }
   }
 
   if (!isValidCSSLength(fontSize)) {
     fontSize = defaultValues.fontSize
-    console.log(`Cylinder: fontSize set by default to ${fontSize}`)
+    if (verbose) {
+      console.log(`Cylinder "${role}": fontSize set by default to ${fontSize}`)
+    }
   }
 
   props = {
