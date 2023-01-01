@@ -6,14 +6,14 @@
 
 import React, {
   useState,
-  useEffect,
-  forwardRef
+  useEffect
 } from 'react';
 
 
+import { Hilite } from './Hilite';
 
 
-export const Cylinder = forwardRef((props, ref) => {
+export const Cylinder = (props) => {
   // offset will change on a regular basis. There is no need
   // to sanitize all the props just for this. Treat it on its own...
   const [ offset, setOffset ] = useState(
@@ -153,8 +153,7 @@ export const Cylinder = forwardRef((props, ref) => {
       style={{
         "--height": `calc(${radius} * 2 * ${fontSize})`,
         "--margin": "0 0.05em",
-        position: "relative",
-        overflowY: "hidden" // hides ascenders and descenders
+        position: "relative"
       }}
     >
 
@@ -166,14 +165,14 @@ export const Cylinder = forwardRef((props, ref) => {
           height: "var(--height)",
           margin: "var(--margin",
           background: gradients.barrel,
+          overflowY: "hidden" // hides ascenders and descenders
         }}
-        ref={ref}
       >
         {/* The rotating content */}
         {content}
       </div>
 
-      {/* ... and its shadow */}
+      {/* ... its shadow, ... */}
       <div
         style={{
           position: "absolute",
@@ -183,11 +182,26 @@ export const Cylinder = forwardRef((props, ref) => {
           margin: "var(--margin",
           background: gradients.shadow
         }}
-      >
-      </div>
+      />
+
+      {/* ... and the controls */}
+      <Hilite
+        edge="top"
+        width={width}
+        gradients={[gradients.topLite, gradients.topPress]}
+        offset={offset}
+        setOffset={setOffset}
+      />
+      <Hilite
+        edge="bottom"
+        width={width}
+        gradients={[gradients.lowLite, gradients.lowPress]}
+        offset={offset}
+        setOffset={setOffset}
+      />
     </div>
   );
-})
+}
 
 
 

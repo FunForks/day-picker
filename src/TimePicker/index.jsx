@@ -101,7 +101,7 @@ const TimePicker = (props) => {
   // Rotate!
   const [ offset, setOffset ] = useState(0)
 
-  const cycleThroughDays = () => {
+  const cycle = () => {
     const newOffset = (offset + 0.1)
 
     setTimeout(() => {
@@ -109,7 +109,7 @@ const TimePicker = (props) => {
     }, 100)
   }
 
-  useEffect(cycleThroughDays)
+  // useEffect(cycle)
 
 
   // Setup

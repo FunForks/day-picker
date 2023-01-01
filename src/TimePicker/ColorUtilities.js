@@ -1,6 +1,6 @@
 /**
  * ColorUtilities.js
- * 
+ *
  * Functions to convert a string color representation into an
  * object with the format:
  * { barrel: "linear-gradient(...)",
@@ -10,15 +10,19 @@
 
 
 
-export const getGradients = (bgColor, shadowColor, faces) => {
+export const getGradients = (bgColor, shadowColor, hoverColor, pressColor, faces) => {
   // Apply defaults if necessary
   const defaultColors = {
-    bg: [128, 128, 128],
-    shadow: [0, 0, 0, 255]
+    bg:     [128, 128, 128],
+    shadow: [  0,   0,   0, 255],
+    hover:  [512, 512, 512, 512],
+    press:  [666, 666, 666, 444]
   }
 
   let mainMax
   let shadowMax
+  let hoverMax
+  let pressMax
 
   if (typeof bgColor === "string") {
     mainMax = colorToRGBArray(bgColor)
@@ -29,13 +33,31 @@ export const getGradients = (bgColor, shadowColor, faces) => {
     mainMax = defaultColors.bg
   }
 
-  if (typeof  shadowColor === "string") {
+  if (typeof shadowColor === "string") {
      shadowMax = colorToRGBArray(shadowColor)
     if (shadowMax.length !== 4 || !shadowMax[3]) {
       shadowMax = defaultColors.shadow
     }
   } else {
     shadowMax = defaultColors.shadow
+  }
+
+  if (typeof hoverColor === "string") {
+    hoverMax = colorToRGBArray(hoverColor)
+    if (hoverMax.length !== 4 || !hoverMax[3]) {
+      hoverMax = defaultColors.hover
+    }
+  } else {
+    hoverMax = defaultColors.hover
+  }
+
+  if (typeof pressColor === "string") {
+    pressMax = colorToRGBArray(pressColor)
+    if (pressMax.length !== 4 || !pressMax[3]) {
+      pressMax = defaultColors.press
+    }
+  } else {
+    pressMax = defaultColors.press
   }
 
   if (!faces || isNaN(faces)) {
@@ -46,25 +68,26 @@ export const getGradients = (bgColor, shadowColor, faces) => {
     faces = Math.max(2, Math.min(faces, 20))
   }
 
-  // Make shadow alpha negative, so it will be subtracted from 255
-  shadowMax[3] = -shadowMax[3]
-
   const angle = Math.PI / faces
 
   // Initialize output strings
-  let barrel = "linear-gradient(0deg"
-  let shadow = "linear-gradient(0deg"
+  let barrel   = "linear-gradient(0deg"
+  let shadow   = "linear-gradient(0deg"
+  let topLite  = "linear-gradient(0deg"
+  let lowLite  = "linear-gradient(180deg"
+  let topPress = "linear-gradient(0deg"
+  let lowPress = "linear-gradient(180deg"
 
   /**
    * getColor returns a string like "#rrggbb" or "#rrggbbaa",
    * where r, g, b, and a are hex digits
    */
   const getColor = (sin, colors) => {
-    const hex = colors.reduce(( hex, value ) => {
+    const hex = colors.reduce(( hex, value, index ) => {
       let decimal = Math.floor(sin * value)
-      if (value < 0) {
-        // used to make the shadow lighter in the centre
-        decimal += 255
+      if (index === 3) {
+        // make the shadow more transparent in the centre
+        decimal = 255 - decimal
       }
       value = Number(decimal).toString(16)
 
@@ -83,7 +106,7 @@ export const getGradients = (bgColor, shadowColor, faces) => {
    * getPercent returns values between 0.0 and 100.0
    */
   const getPercent = (cos, halfway) => {
-    const percent = (halfway) 
+    const percent = (halfway)
     ? (50 + 50 * cos).toFixed(1)
     : (50 - 50 * cos).toFixed(1)
 
@@ -101,16 +124,39 @@ export const getGradients = (bgColor, shadowColor, faces) => {
 
     const main = getColor(sin, mainMax)
     const dark = getColor(sin, shadowMax)
-    
+
     const percent = getPercent(cos, (ii > faces / 2))
 
     barrel += ", " + main + " " + percent + "%"
     shadow += ", " + dark + " " + percent + "%"
   }
 
+  faces = Math.max(2, Math.round(faces/4))
+
+  for ( let ii = 0; ii < faces; ii++ ) {
+    const turn = angle * ii / 4
+
+    const sin = Math.sin(turn)
+    const cos = Math.abs(Math.cos(turn))
+
+    const hover = getColor(sin, hoverMax)
+    const press = getColor(sin, pressMax)
+
+    const percent = getPercent(cos, (ii > faces / 2))
+
+    topLite  += ", " + hover + " " + percent + "%"
+    lowLite  += ", " + hover + " " + percent + "%"
+    topPress += ", " + press + " " + percent + "%"
+    lowPress += ", " + press + " " + percent + "%"
+  }
+
   return {
-    barrel: `${barrel}, #000000 100%)`,
-    shadow: `${shadow}, #000000ff 100%)`
+    barrel:   `${barrel},  #000000 100%)`,
+    shadow:   `${shadow},  #000000ff 100%)`,
+    topLite:  `${topLite}, #000000 100%)`,
+    lowLite:  `${lowLite}, #000000ff 100%)`,
+    topPress: `${topPress}, #000000 100%)`,
+    lowPress: `${lowPress}, #000000ff 100%)`
   }
 }
 
