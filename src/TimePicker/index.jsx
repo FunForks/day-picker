@@ -11,7 +11,6 @@
 import React, {
   useState,
   useEffect,
-  useRef,
 } from 'react';
 
 
@@ -82,7 +81,6 @@ const TimePicker = (props) => {
     () => getWeekdayNames(locale, { weekday })
   )
   const setWeekdayNames = () => {
-    console.log("setWeekdayNames")
     const weekdayNames = getWeekdayNames(locale, { weekday })
     setWeekdays(weekdayNames)
   }
@@ -98,40 +96,6 @@ const TimePicker = (props) => {
     setMinutes(minutes)
   }
   useEffect(setMinuteArray, [everyNMinutes])
-
-
-  // Optimize widths
-  const [ barrelWidths, setBarrelWidths ] = useState([])
-  const barrelRef = useRef()
-
-  const setWidth = () => {
-    const barrelDiv = barrelRef.current
-    const barrels = Array.from(barrelDiv.children)
-                         .filter( el => el.tagName === "DIV")
-
-    const barrelWidths = barrels.reduce(( widths, barrel ) => {
-      const items = Array.from(barrel.querySelectorAll("p"))
-      const width = items.reduce(( max, element ) => {
-        // Temporarily switch off the inline width, so that we can
-        // get the actual width taken by the text.
-        element.style.width = ""
-        const scrollWidth = element.scrollWidth
-        element.style.width = "100%"
-
-        if (max < scrollWidth) {
-          max = scrollWidth
-        }
-        return max
-      }, 0)
-
-      widths.push(`${width * 1.01}px`)
-      return widths
-
-    }, [])
-
-    setBarrelWidths(barrelWidths)
-  }
-  useEffect(setWidth, [weekdays])
 
 
   // Rotate!
@@ -182,7 +146,6 @@ const TimePicker = (props) => {
         key={role+index}
         {...sharedProps}
         {...props}
-        width={barrelWidths[index]}
         items={items}
       />
     )
@@ -195,7 +158,6 @@ const TimePicker = (props) => {
         display: "flex",
         justifyContent: "center"
       }}
-      ref={barrelRef}
     >
       {cylinders}
     </div>
@@ -217,7 +179,7 @@ const sanitize = (props) => {
     weekday,      // long, short, narrow
     weekAlign,    // left, center, right
     display,      // array of barrels to show
-    everyNMinutes  //
+    everyNMinutes // divisor of 60
 
     // // Sanitized in Cylinder.jsx
     // radius,      // numerical 'em' value

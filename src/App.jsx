@@ -123,7 +123,8 @@ function App() {
         return [
           {
             role: "weekdays",
-            textAlign: weekAlign
+            textAlign: weekAlign,
+            // padding: "0em"
           },
           {
             role: "hours",

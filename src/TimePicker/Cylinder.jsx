@@ -45,11 +45,20 @@ export const Cylinder = forwardRef((props, ref) => {
     spacing,   // floating-point number ≥ 2
     radius,    // CSS length, e.g.: 2em
     gradients, // { barrel: <linear gradient>, shadow: <also> }
-    width,     // CSS length, e.g.: 29px (missing on first render)
     textAlign, // "left", "right", "center" (defaults to inherit)
     padding,   // CSS length
     fontSize   // CSS length, e.g.: 4vmin
   } = cleanProps
+
+  // Optimal width
+  const [ width, setWidth ] = useState(
+    () => getWidthOf(items, fontSize, padding)
+  )
+  const setBarrelWidth = () => {
+    const width = getWidthOf(items, fontSize, padding)
+    setWidth(width)
+  }
+  useEffect(setBarrelWidth, [items, fontSize])
 
 
   const angle = Math.PI * 2 / spacing
@@ -109,8 +118,9 @@ export const Cylinder = forwardRef((props, ref) => {
         key={item+index}
         style={{
           position: "absolute",
-          margin: 0,
+          margin: "0",
           top: "50%",
+          left: "0",
           width: "100%",
           boxSizing: "border-box",
           whiteSpace: "nowrap",
@@ -119,6 +129,8 @@ export const Cylinder = forwardRef((props, ref) => {
 
           // Tweak for compatibility with Thai fonts
           padding: (padding || "0 0.1em"),
+          paddingTop: "0",
+          paddingBottom: "0",
 
           transformOrigin: `0 50% ${radius}em`,
           transform: `
@@ -322,4 +334,31 @@ const sanitizeOthers = (props) => {
   }
 
   return props
+}
+
+
+/**
+ * HACK: create a temporary div, populate it with a <p> element
+ * for each item, attach the div to the document momentarily,
+ * grab its width and then delete it. It might be possible to
+ * do this with an SVG element without adding it to the DOM.
+ */
+const getWidthOf = (items, fontSize, padding) => {  
+  const div = document.createElement("div")
+  div.style.display = "inline-block"
+  div.style.fontSize = fontSize
+
+  items.forEach( item => {
+    const p = document.createElement("p")
+    p.style.whiteSpace = "nowrap"
+    p.style.padding = padding
+    p.innerText = item
+    div.appendChild(p)
+  })
+
+  document.body.append(div)
+  const width = div.scrollWidth
+  div.remove()
+
+  return width * 1.07 // HACK: IS THIS FUDGE FOR THE THAI PADDING?
 }
