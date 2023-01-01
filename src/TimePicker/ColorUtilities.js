@@ -15,8 +15,8 @@ export const getGradients = (bgColor, shadowColor, hoverColor, pressColor, faces
   const defaultColors = {
     bg:     [128, 128, 128],
     shadow: [  0,   0,   0, 255],
-    hover:  [512, 512, 512, 512],
-    press:  [666, 666, 666, 444]
+    hover:  [255, 255, 255,  51],
+    press:  [255, 255, 255,  96]
   }
 
   let mainMax
@@ -68,26 +68,30 @@ export const getGradients = (bgColor, shadowColor, hoverColor, pressColor, faces
     faces = Math.max(2, Math.min(faces, 20))
   }
 
-  const angle = Math.PI / faces
+  let angle = Math.PI / faces
 
   // Initialize output strings
   let barrel   = "linear-gradient(0deg"
   let shadow   = "linear-gradient(0deg"
-  let topLite  = "linear-gradient(0deg"
-  let lowLite  = "linear-gradient(180deg"
-  let topPress = "linear-gradient(0deg"
-  let lowPress = "linear-gradient(180deg"
+  let topLite  = "linear-gradient(180deg"
+  let lowLite  = "linear-gradient(0deg"
+  let topPress = "linear-gradient(180deg"
+  let lowPress = "linear-gradient(0deg"
 
   /**
    * getColor returns a string like "#rrggbb" or "#rrggbbaa",
    * where r, g, b, and a are hex digits
    */
-  const getColor = (sin, colors) => {
+  const getColor = (sin, colors, fixedAlpha) => {
     const hex = colors.reduce(( hex, value, index ) => {
       let decimal = Math.floor(sin * value)
       if (index === 3) {
-        // make the shadow more transparent in the centre
-        decimal = 255 - decimal
+        if (fixedAlpha) {
+          decimal = value
+        } else {
+          // make the shadow more transparent in the centre
+          decimal = 255 - decimal
+        }
       }
       value = Number(decimal).toString(16)
 
@@ -131,18 +135,19 @@ export const getGradients = (bgColor, shadowColor, hoverColor, pressColor, faces
     shadow += ", " + dark + " " + percent + "%"
   }
 
-  faces = Math.max(2, Math.round(faces/4))
+  // Generate hilites
+  angle = Math.PI / 4 / faces
+  const adjust = 1 / Math.cos(Math.PI / 4)
 
-  for ( let ii = 0; ii < faces; ii++ ) {
-    const turn = angle * ii / 4
+  for ( let ii = 0; ii <= faces; ii++ ) {
+    const turn = angle * ii
 
-    const sin = Math.sin(turn)
-    const cos = Math.abs(Math.cos(turn))
+    const sin = Math.sin(turn) * adjust
 
-    const hover = getColor(sin, hoverMax)
-    const press = getColor(sin, pressMax)
+    const hover = getColor(sin, hoverMax, true)
+    const press = getColor(sin, pressMax, true)
 
-    const percent = getPercent(cos, (ii > faces / 2))
+    const percent = (sin * 100).toFixed(2)
 
     topLite  += ", " + hover + " " + percent + "%"
     lowLite  += ", " + hover + " " + percent + "%"
@@ -150,13 +155,14 @@ export const getGradients = (bgColor, shadowColor, hoverColor, pressColor, faces
     lowPress += ", " + press + " " + percent + "%"
   }
 
+
   return {
     barrel:   `${barrel},  #000000 100%)`,
     shadow:   `${shadow},  #000000ff 100%)`,
-    topLite:  `${topLite}, #000000 100%)`,
-    lowLite:  `${lowLite}, #000000ff 100%)`,
-    topPress: `${topPress}, #000000 100%)`,
-    lowPress: `${lowPress}, #000000ff 100%)`
+    topLite:  `${topLite})`,
+    lowLite:  `${lowLite})`,
+    topPress:  `${topPress})`,
+    lowPress:  `${lowPress})`,
   }
 }
 

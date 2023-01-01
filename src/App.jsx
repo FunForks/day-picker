@@ -124,7 +124,6 @@ function App() {
           {
             role: "weekdays",
             textAlign: weekAlign,
-            // padding: "0em"
           },
           {
             role: "hours",
@@ -181,7 +180,7 @@ function App() {
 
           <Selector
             key="weekday"
-            attribute="Size"
+            attribute="Weekdays"
             options={sizes}
             value={weekday}
             setValue={setWeekday}
@@ -292,7 +291,8 @@ const Selector = ({ attribute, options, value, setValue }) => {
     <label>
       <span
         style={{
-          display: "block"
+          display: "block",
+          color: "#999"
         }}
       >
         {attribute}:

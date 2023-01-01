@@ -186,6 +186,7 @@ export const Cylinder = (props) => {
 
       {/* ... and the controls */}
       <Hilite
+        itemCount={items.length}
         edge="top"
         width={width}
         gradients={[gradients.topLite, gradients.topPress]}
@@ -193,6 +194,7 @@ export const Cylinder = (props) => {
         setOffset={setOffset}
       />
       <Hilite
+        itemCount={items.length}
         edge="bottom"
         width={width}
         gradients={[gradients.lowLite, gradients.lowPress]}
@@ -266,6 +268,7 @@ const sanitizeOffset = (props) => {
     offset = 0
   }
 
+
   return offset
 }
 
@@ -288,7 +291,7 @@ const sanitizeOthers = (props) => {
 
 
   const defaultValues = {
-    radius: 1,
+    radius: 1.5,
     fontSize: "1em",
     items: ["items", "array", "of" ,"strings", "- missing -"],
     spacing: 8.5
@@ -357,7 +360,7 @@ const sanitizeOthers = (props) => {
  * grab its width and then delete it. It might be possible to
  * do this with an SVG element without adding it to the DOM.
  */
-const getWidthOf = (items, fontSize, padding) => {  
+const getWidthOf = (items, fontSize, padding) => {
   const div = document.createElement("div")
   div.style.display = "inline-block"
   div.style.fontSize = fontSize

@@ -21,6 +21,7 @@ const REDUCE_BY  = 0.8
 let renders = 0
 
 export const Hilite = ({
+  itemCount, // number of items
   edge,      // "top" | "bottom"
   width,     // CSS length
   gradients, // [<hilite gradient string>, <press gradient string>]
@@ -75,17 +76,25 @@ export const Hilite = ({
     // Action
     const autoScroll = () => {
       if (pressed && hover) {
-        closureOffset += direction
-        setOffset(closureOffset)
+        incrementOffset()
         rate = Math.max(rate * REDUCE_BY, MIN_DELAY)
         timeOut = setTimeout(autoScroll, rate)
       }
     }
 
 
-    if (pressed) {
+    const incrementOffset = () => {
       closureOffset += direction
+      while (closureOffset < 0) {
+        closureOffset += itemCount
+      }
+
       setOffset(closureOffset)
+    }
+
+
+    if (pressed) {
+      incrementOffset()
       timeOut = setTimeout(autoScroll, START_AUTO)
       rate = START_RATE
 

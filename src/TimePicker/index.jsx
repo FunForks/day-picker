@@ -195,7 +195,7 @@ const sanitize = (props) => {
 
   const defaultValues = {
     locale: "en",
-    weekday: "short",
+    weekday: "long",
     display: [ "weekdays", "hours", "minutes" ],
     weekAlign: "center",
     everyNMinutes: 1
