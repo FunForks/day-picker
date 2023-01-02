@@ -1,7 +1,7 @@
 /**
  * App.jsx
  *
- * Creates a set of rotating Time Picker, with a set of selectors
+ * Creates a Time Picker, with a set of selectors
  * for changing the initial settings
  */
 
@@ -11,13 +11,13 @@ import React, { useState, useEffect } from 'react';
 
 import TimePicker from './TimePicker'
 
+import Toolbar from './Toolbar'
+import Selector from './Toolbar/Selector'
 
-let renders = 0
+
 
 function App() {
-  console.log("App renders:", ++renders);
-
-
+  // Settings
   const displays = {
     "days": "Days",
     "h&m": "Time",
@@ -31,6 +31,8 @@ function App() {
     "en": "English",
     "fr": "Français",
     "ru": "Русский",
+    "sr-Latn": "Srpski",
+    "sr-Cyrl": "Cрпски",
     "th": "ภาษาไทย",
     "zh": "中文",
     "": "Default"
@@ -53,12 +55,12 @@ function App() {
   }
 
   const radii = {
-    "1.0": "1",
+    "1.00": "1",
     "1.25": "1.25",
-    "1.5": "1.5",
-    "2.0": "2",
-    "3.0": "3",
-    "": "Default"
+    "1.50": "1.5",
+    "2.00": "2",
+    "3.00": "3",
+    "":    "Default"
   }
 
   const alignments = {
@@ -69,32 +71,34 @@ function App() {
   }
 
   const nMinutes = {
-    1: "1m",
-    2: "2m",
-    3: "3m",
-    4: "4m",
-    5: "5m",
-    6: "6m",
-    10: "10m",
-    12: "12m",
-    15: "15m",
-    20: "20m",
-    30: "30m",
-    60: "00",
+    "1.00": "1m",
+    "2.00": "2m",
+    "3.00": "3m",
+    "4.00": "4m",
+    "5.00": "5m",
+    "6.00": "6m",
+    "7.00": "7m",
+    "7.50": "7.5m",
+    "10.00": "10m",
+    "12.00": "12m",
+    "15.00": "15m",
+    "20.00": "20m",
+    "30.00": "30m",
+    "60.00": "00",
     "": "Default"
   }
 
   const [ display, setDisplay ]     = useState("")
+
   const [ locale, setLocale ]       = useState("")
   const [ bgColor, setBgColor ]     = useState("")
   const [ weekday, setWeekday ]     = useState("")
-  const [ radius, setRadius ]       = useState("")
   const [ weekAlign, setWeekAlign ] = useState("")
   const [ minutesInterval, setminutesInterval ] = useState("")
 
-  const [ spacing, setSpacing ] = useState("")
-
-  const [ fontSize, setFontSize ] = useState("9vmin")
+  const [ radius, setRadius ]       = useState("")
+  const [ spacing, setSpacing ]     = useState("")
+  const [ fontSize, setFontSize ]   = useState("9vmin")
 
 
 
@@ -146,24 +150,69 @@ function App() {
   })()
 
 
+  // Input date and output listener
+  const [ date, setDate ] = useState(new Date())
+
+  let timeZone = Intl && Intl.DateTimeFormat
+              && Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  const onChange = (newDate) => {
+    if (newDate.getTime() !== date.getTime() ){
+      setDate(newDate)
+    }
+  }
+
+  // Preparing output string
+  const isoCode = locale || navigator.language  
+  const dayOptions = {
+    weekday: "long",
+    timeZone
+  }
+  const dayName = date.toLocaleString(isoCode, dayOptions)
+  const dateString = date.toLocaleTimeString(isoCode, timeZone)
+
+  timeZone = timeZone
+           ? ` (${timeZone})`
+           : ""
+
+  const output = `${dayName} ${dateString}${timeZone}`
+
 
   return (
     <>
-      <TimePicker
-        // Selectors
-        locale={locale}
-        bgColor={bgColor}
-        weekday={weekday}
-        weekAlign={weekAlign}
-        minutesInterval={minutesInterval}
-        // Sliders
-        radius={radius}
-        spacing={spacing}
-        fontSize={fontSize}
+      <div
+        style={{
+          flex: 1
+        }}
+      >
+        <TimePicker
+          // I/O
+          date={date}
+          onChange={onChange}
 
-        // Cylinders to show
-        display={items}
-      />
+          // Selectors
+          locale={locale}
+          bgColor={bgColor}
+          weekday={weekday}
+          weekAlign={weekAlign}
+
+          // Sliders
+          minutesInterval={minutesInterval}
+          radius={radius}
+          spacing={spacing}
+          fontSize={fontSize}
+
+          // Cylinders to show
+          display={items}
+          // Feedback during development
+          // verbose ={true}
+        />
+        <p
+          style={{textAlign: "center", fontSize: "4.5vmin"}}
+        >
+          {output}
+        </p>
+      </div>
 
       <Toolbar
         children={[
@@ -229,90 +278,3 @@ function App() {
 }
 
 export default App;
-
-
-
-const Toolbar = ({ children }) => {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        width: "100vw",
-        display: "flex",
-        justifyContent: "space-around",
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-
-
-const Selector = ({ attribute, options, value, setValue }) => {
-  const treatChange = (event) => {
-    let value = event.target.value
-
-    if (!value || value === "undefined") {
-      value = undefined
-
-    } else if (Number(value) == value) {
-      // Use an actual number, when possible
-      value = Number(value)
-    }
-
-    console.log(`Setting ${attribute} value:`, value);
-
-    setValue(value)
-  }
-
-
-  options = Object.entries(options).map( item => {
-    let [ value, display ] = item
-    const index = display.indexOf("*")
-    const disabled = index >= 0
-    if (disabled) {
-      display = display.slice(0, index)
-    }
-
-    return (
-      <option
-        key={value}
-        value={value}
-        disabled={disabled}
-        style={{
-          fontSize: "inherit"
-        }}
-      >
-        {display}
-      </option>
-    )
-  })
-
-
-  return (
-    <label>
-      <span
-        style={{
-          display: "block",
-          color: "#999"
-        }}
-      >
-        {attribute}:
-      </span>
-      <select
-        value={value}
-        onChange={treatChange}
-        style={{
-          backgroundColor: "#222",
-          color: "#fff",
-          borderColor: "#222"
-        }}
-      >
-        {options}
-      </select>
-    </label>
-  )
-}

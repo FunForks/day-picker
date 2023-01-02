@@ -12,6 +12,7 @@
 import React, { useState } from 'react';
 
 
+
 // Constants to control auto-scrolling
 const START_AUTO = 1000
 const ANIMATION  = START_AUTO * 0.5
@@ -55,17 +56,18 @@ export const Hilite = ({
 
 
   const release = event => {
+    const type = event.type
     setPressed(false)
     clearTimeout(timeOut)
     // Tidy up
     setTimeout(0)
-    document.body.removeEventListener(event.type, release, false)
+    document.removeEventListener(type, release, false)
   }
 
 
   const treatPress = event => {
     // Visual feedback
-    const type = event.type
+    const type = event.type // mousedown | touchstart
     const pressed = type === "mousedown"
                  || type === "touchstart"
     const pressEnd = type === "mousedown" ? "mouseup" : "touchend"
@@ -75,7 +77,7 @@ export const Hilite = ({
     // component, even outside this window. In the latter case,
     // no event will be received, so the Cylinder may keep
     // scrolling. In the former case, the scrolling will stop.
-    document.body.addEventListener(pressEnd, release, false)
+    document.addEventListener(pressEnd, release, false)
 
     // Action
     const autoScroll = () => {

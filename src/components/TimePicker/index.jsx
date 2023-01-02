@@ -10,10 +10,8 @@
 
 import React, {
   useState,
-  useEffect,
+  useEffect
 } from 'react';
-
-
 
 import { Cylinder } from './Cylinder'
 import { getGradients } from './ColorUtilities'
@@ -24,6 +22,7 @@ import {
  } from './TimeUtilities';
 
 
+import zonesAndCodes from './ZonesAndCodes.json'
 
 
 const TimePicker = (props) => {
@@ -46,23 +45,44 @@ const TimePicker = (props) => {
   const reviewNewProps = () => {
     setCleanProps(sanitize(props))
   }
-  const dependencies = Object.keys(props).map(prop => props[prop])  
+  const keys = [
+    "bgColor",
+    "date",
+    "display",
+    "faces",
+    "fontSize",
+    "hoverColor",
+    "locale",
+    "minutesInterval",
+    "pressColor",
+    "radius",
+    "shadowColor",
+    "spacing",
+    "verbose",
+    "weekAlign",
+    "weekday"
+  ]
+  const dependencies = keys.map(prop => props[prop])
   useEffect(reviewNewProps, dependencies)
 
   const {
-    locale,       // ISO code, such as "en"
-    weekday,      // long, short, narrow
-    weekAlign,    // left, center, right
-    bgColor,      // color for barrel
-    shadowColor,  // color for shadow
-    faces,        // integer linear-gradient stopping points
-    radius,       // numerical 'em' value
-    spacing,      // number of items per cycle
-    fontSize,     // CSS length
-    display,      // array of barrels to show
-    minutesInterval // read in from display[ { role: minutes, ... }]
+    onChange,        // callback function
+    date,            // Date object (date, month, year ignored)
+    timeZone,        // string such as "Europe/Moscow"
+    locale,          // ISO code, such as "en"
+    weekday,         // long, short, narrow
+    weekAlign,       // left, center, right
+    bgColor,         // color for barrel
+    shadowColor,     // color for shadow
+    faces,           // integer linear-gradient stopping points
+    radius,          // numerical 'em' value
+    spacing,         // number of items per cycle
+    fontSize,        // CSS length
+    display,         // array of barrels to show
+    minutesInterval, // read from display[ { role: minutes, ... }]
+    verbose,         // if true, log when default values are used
   } = cleanProps
-    
+
 
   // Use the same technique to trigger updates when values change
 
@@ -70,11 +90,12 @@ const TimePicker = (props) => {
   const [ gradients, setGradients ] = useState(
     () => getGradients(bgColor, shadowColor, faces)
   )
-  const setGradientColors = () => {    
+  const setGradientColors = () => {
     const gradients = getGradients(bgColor, shadowColor, faces)
     setGradients(gradients)
   }
   useEffect(setGradientColors, [bgColor, shadowColor, faces])
+
 
   // Weekday names
   const [ weekdays, setWeekdays ] = useState(
@@ -97,6 +118,48 @@ const TimePicker = (props) => {
   }
   useEffect(setMinuteArray, [minutesInterval])
 
+  // timeChunks for offset
+  const getTimeChunks = () => {
+    const dateTime = date.getTime()
+
+    const weekday = "long"
+    const timeOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone
+    }
+    const dayOptions = {
+      weekday,
+      timeZone
+    }
+    // Use en-GB to get hour with 24-hour clock: 00:00 to 23:59
+    const time = date.toLocaleString("en-GB", timeOptions)
+
+    let [ hours, minutes ] = time.split(":")
+    hours = Number(hours)
+    minutes = Math.round(minutes / minutesInterval)
+    // Tweak the actual date to correspond to the rounded value
+    date.setMinutes(minutes * minutesInterval, 0, 0)
+
+    let weekdays = date.toLocaleString(locale, dayOptions)
+    const dayNames = getWeekdayNames(locale, { weekday })
+    weekdays = dayNames.indexOf(weekdays)
+
+    // Callback immediately, with the revised minutes
+    if (date.getTime() !== dateTime){
+      setTimeout(() => onChange(date), 0)
+    }
+    // NOTE: This may cause an infinite loop if the callback
+    // re-renders the TimePicker component.
+
+    return { weekdays, hours, minutes }
+  }
+  const [ timeChunks, setTimeChunks ] = useState(
+    () => getTimeChunks()
+  )
+  useEffect(getTimeChunks, [date])
+
+
   // Rotate for testing!
   // const [ offset, setOffset ] = useState(0)
 
@@ -109,19 +172,40 @@ const TimePicker = (props) => {
   // useEffect(cycle)
 
 
+  const adjustTime = (role, value) => {
+    switch (role) {
+      case "weekdays":
+        const dayShift = value - timeChunks.weekdays
+        timeChunks.weekdays = value
+        const newTime = date.getTime() + dayShift * 24 * 3600000
+        date.setTime(newTime)
+      break
+      case "hours":
+        date.setHours(value)
+      break
+      case "minutes":
+        date.setMinutes(value *= minutesInterval, 0, 0)
+    }
+
+    setTimeout(() => onChange(new Date(date.getTime())), 0)
+  }
+
+
   // Setup
   const sharedProps  = {
+    adjustTime,
     radius,
     gradients,
     // offset, // only needed for testing
     spacing,
-    fontSize
+    fontSize,
+    verbose
   }
 
   const cylinders = display.map(( props, index ) => {
     const { role } = props
-    let items
 
+    let items
     switch (role) {
       case "weekdays":
         items = weekdays
@@ -129,8 +213,6 @@ const TimePicker = (props) => {
         break
       case "hours":
         items = hours
-        // Fun: make hours turn backwards, override sharedProps
-        props.offset = -sharedProps.offset
         break
       case "minutes":
         items = minutes
@@ -144,6 +226,7 @@ const TimePicker = (props) => {
         {...sharedProps}
         {...props}
         items={items}
+        offset={timeChunks[role]}
       />
     )
   })
@@ -166,17 +249,45 @@ export default TimePicker;
 
 // UTILITIES // UTILITIES // UTILITIES // UTILITIES // UTILITIES //
 
+
+
+const nearestDivisorOf60 = (number, verbose) => {
+  if (verbose) {
+    console.log(`TimePicker: ${number} is not an integer divisor of 60 minutes`)
+  }
+
+  number = parseInt(number, 10)
+  if (!number || isNaN(number)) {
+    return 1
+  }
+
+  number = Math.max(1, Math.min(number, 60))
+
+  while (60 % number) {
+    number--
+  }
+  if (verbose) {
+    console.log(`            ${number} will be used instead`)
+  }
+
+  return number
+}
+
+
 /**
  *  sanitize(props)
  *  Apply default values as necessary. Some are treated elsewhere.
  */
 const sanitize = (props) => {
   let {
+    onChange,       // optional callback function
+    date,           // Date object (date, month, year ignored)
+    timeZone,       // string such as "Europe/Moscow"
     locale,         // ISO code, such as "en"
     weekday,        // long, short, narrow
     weekAlign,      // left, center, right
     display,        // array of barrels to show
-    minutesInterval // divisor of 60
+    minutesInterval,// divisor of 60
 
     // // Sanitized in Cylinder.jsx
     // radius,      // numerical 'em' value
@@ -189,11 +300,17 @@ const sanitize = (props) => {
     // hoverColor,  // color for hover hilite
     // pressColor,  // color for pressed hilite
     // faces,       // integer linear-gradient stopping points
+
+    verbose         // if truthy, use of default values is logged
   } = props
-    
+
 
   const defaultValues = {
-    locale: "en",
+    date: new Date(),
+    timeZone: Intl && Intl.DateTimeFormat
+           && Intl.DateTimeFormat().resolvedOptions().timeZone,
+           // may be undefined
+    locale: navigator.language,
     weekday: "long",
     display: [ "weekdays", "hours", "minutes" ],
     weekAlign: "center",
@@ -202,43 +319,93 @@ const sanitize = (props) => {
 
   // Acceptable values
   const roles = defaultValues.display
-  const isoCodes = ["ab", "aa", "af", "ak", "sq", "am", "ar", "an", "hy", "as", "av", "ae", "ay", "az", "bm", "ba", "eu", "be", "bn", "bi", "bs", "br", "bg", "my", "ca", "ch", "ce", "ny", "zh", "cu", "cv", "kw", "co", "cr", "hr", "cs", "da", "dv", "nl", "dz", "en", "eo", "et", "ee", "fo", "fj", "fi", "fr", "fy", "ff", "gd", "gl", "lg", "ka", "de", "el", "kl", "gn", "gu", "ht", "ha", "he", "hz", "hi", "ho", "hu", "is", "io", "ig", "id", "ia", "ie", "iu", "ik", "ga", "it", "ja", "jv", "kn", "kr", "ks", "kk", "km", "ki", "rw", "ky", "kv", "kg", "ko", "kj", "ku", "lo", "la", "lv", "li", "ln", "lt", "lu", "lb", "mk", "mg", "ms", "ml", "mt", "gv", "mi", "mr", "mh", "mn", "na", "nv", "nd", "nr", "ng", "ne", "no", "nb", "nn", "Yi", "oc", "oj", "or", "om", "os", "pi", "ps", "fa", "pl", "pt", "pa", "qu", "ro", "rm", "rn", "ru", "se", "sm", "sg", "sa", "sc", "sr", "sn", "sd", "si", "sk", "sl", "so", "st", "es", "su", "sw", "ss", "sv", "tl", "ty", "tg", "ta", "tt", "te", "th", "bo", "ti", "to", "ts", "tn", "tr", "tk", "tw", "ug", "uk", "ur", "uz", "ve", "vi", "vo", "wa", "cy", "wo", "xh", "yi", "yo", "za", "zu"]
+  const { timeZones, isoCodes } = zonesAndCodes
   const weekdayValues = ["long", "short", "narrow"]
   const alignments = ["left", "right", "center"]
   const allowedKeys = [
+    "date",
+    "timeZone",
     "role",
     "textAlign",
     "minutesInterval",
     "padding",
-    "spacing"
+    "spacing",
+    "verbose"
   ]
-  
+
+
+  if (typeof onChange !== "function") {
+    console.log(`TimePicker
+    You have created a TimePicker component without an onChange
+    listener. The TimePicker will function perfectly but you
+    will not be able to treat the selected time.`)
+    onChange = () => {}
+  }
+
+
+  // date
+  if ( typeof date === "object" && (date instanceof Date)) {
+    // Clone the date, so that changes do not update in source
+    date = new Date(date.getTime())
+
+  } else {
+    ({ date } = defaultValues)
+    if (verbose) {
+      console.log(`TimePicker: date set by default to now`)
+    }
+  }
+
+
+  // timeZone
+  if ( typeof timeZone !== "string"
+    || timeZones.indexOf(timeZone) < 0
+     ) {
+    ({ timeZone } = defaultValues)
+    if (verbose) {
+      console.log(`TimePicker: timeZone set by default to "${timeZone}"`)
+    }
+  }
+
 
   // locale
   if ( typeof locale !== "string"
    || isoCodes.indexOf(locale.slice(0,2).toLowerCase()) < 0
      ) {
     ({ locale } = defaultValues)
-    console.log(`TimePicker: locale set by default to "${locale}"`)
+    if (verbose) {
+      console.log(`TimePicker: locale set by default to "${locale}"`)
+    }
   }
 
 
   // weekday
   if ( typeof weekday !== "string") {
     ({ weekday } = defaultValues)
-    console.log(`TimePicker: weekday set by default to "${weekday}"`)
+    if (verbose) {
+      console.log(`TimePicker: weekday set by default to "${weekday}"`)
+    }
   } else {
     weekday = weekday.toLowerCase()
 
     if (weekdayValues.indexOf(weekday) < 0) {
       ({ weekday } = defaultValues)
-      console.log(`TimePicker: weekday set by default to "${weekday}"`)
+      if (verbose) {
+        console.log(`TimePicker: weekday set by default to "${weekday}"`)
+      }
     }
   }
 
 
+  // Top level minutesInterval (needed even if no minutes are shown)
+  if ( !minutesInterval || isNaN(minutesInterval)){
+    ({ minutesInterval } = defaultValues)
+  } else if (minutesInterval % 1 || 60 % minutesInterval) {
+    minutesInterval = nearestDivisorOf60(minutesInterval, verbose)
+  }
+
+
   // display / display / display / display / display / display //
-  
+
   // Ensure display is an array
   if (!Array.isArray(display)) {
     ({ display } = defaultValues)
@@ -270,30 +437,20 @@ const sanitize = (props) => {
     if (roles.indexOf(role) < 0) {
       return null
     }
-    
+
     // use default value for minutesInterval, if minutes is invalid
     if (role === "minutes") {
-      if ( !minutesInterval
-        || isNaN(minutesInterval)
-        || 60 % minutesInterval
-         ) {
-        minutesInterval = false
-      }
+      if (!minInt || isNaN(minInt)) {
+        minInt = minutesInterval // already set to default
 
-      if (!minInt || isNaN(minInt) || 60 % minInt) {
-        if (minutesInterval) {
-          minInt = minutesInterval
-
-        } else {
-          minInt = defaultValues.minutesInterval
-          console.log(`TimePicker: minutesInterval set by default to ${minInt}`)
-        }
+      } else if (minInt % 1 || 60 % minInt){
+        minInt = nearestDivisorOf60(minInt, verbose)
       }
 
       // Promote to the top level of props, for useEffect
       minutesInterval = item.minutesInterval = minInt
     }
-    
+
     if (role === "weekdays") {
       // Use props.weekAlign as default, but only if it is valid
       if (alignments.indexOf(weekAlign) < 0) {
@@ -304,7 +461,9 @@ const sanitize = (props) => {
         if (!weekAlign) {
           // Use the standard default...
           textAlign = defaultValues.weekAlign
-          console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+          if (verbose) {
+            console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+          }
         } // ... otherwise use weekAlign
 
       } else {
@@ -316,11 +475,13 @@ const sanitize = (props) => {
 
           } else {
             textAlign = defaultValues.weekAlign
-            console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+            if (verbose) {
+              console.log(`TimePicker: alignment for weekdays set by default to "${textAlign}"`)
+            }
           }
         }
       }
-      
+
       // Promote to top level of props, for useEffect
       weekAlign = item.textAlign = textAlign || weekAlign
 
@@ -353,7 +514,7 @@ const sanitize = (props) => {
     })
 
     return item
-  
+
   }).filter( item => !!item )
 
   if (!display.length) {
@@ -362,13 +523,15 @@ const sanitize = (props) => {
 
   props = {
     ...props,
+    onChange,
+    date,
     locale,
     weekday,
     weekAlign,
     display,
     minutesInterval
   }
-  
+
 
   return props
 }
