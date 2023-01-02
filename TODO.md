@@ -11,14 +11,18 @@ Add Sliders for
 
 Interaction
 ———————————
-+ Drag?
++ **Drag**
 + Arrows?
-+ Show current value
+√ Show current value
 + Summary with button to pop out picker
 
 UI
 ——
 + Prevent text from being selectable/draggable
+
+Demo
+————
+Timetable with coloured entries. 
 
 
 Bugs

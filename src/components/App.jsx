@@ -1,7 +1,7 @@
 /**
  * App.jsx
  *
- * Creates a set of rotating Time Picker, with a set of selectors
+ * Creates a Time Picker, with a set of selectors
  * for changing the initial settings
  */
 
@@ -17,6 +17,7 @@ import Selector from './Toolbar/Selector'
 
 
 function App() {
+  // Settings
   const displays = {
     "days": "Days",
     "h&m": "Time",
@@ -30,6 +31,8 @@ function App() {
     "en": "English",
     "fr": "Français",
     "ru": "Русский",
+    "sr-Latn": "Srpski",
+    "sr-Cyrl": "Cрпски",
     "th": "ภาษาไทย",
     "zh": "中文",
     "": "Default"
@@ -52,12 +55,12 @@ function App() {
   }
 
   const radii = {
-    "1.0": "1",
+    "1.00": "1",
     "1.25": "1.25",
-    "1.5": "1.5",
-    "2.0": "2",
-    "3.0": "3",
-    "": "Default"
+    "1.50": "1.5",
+    "2.00": "2",
+    "3.00": "3",
+    "":    "Default"
   }
 
   const alignments = {
@@ -68,18 +71,20 @@ function App() {
   }
 
   const nMinutes = {
-    1: "1m",
-    2: "2m",
-    3: "3m",
-    4: "4m",
-    5: "5m",
-    6: "6m",
-    10: "10m",
-    12: "12m",
-    15: "15m",
-    20: "20m",
-    30: "30m",
-    60: "00",
+    "1.00": "1m",
+    "2.00": "2m",
+    "3.00": "3m",
+    "4.00": "4m",
+    "5.00": "5m",
+    "6.00": "6m",
+    "7.00": "7m",
+    "7.50": "7.5m",
+    "10.00": "10m",
+    "12.00": "12m",
+    "15.00": "15m",
+    "20.00": "20m",
+    "30.00": "30m",
+    "60.00": "00",
     "": "Default"
   }
 
@@ -145,27 +150,69 @@ function App() {
   })()
 
 
+  // Input date and output listener
+  const [ date, setDate ] = useState(new Date())
+
+  let timeZone = Intl && Intl.DateTimeFormat
+              && Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  const onChange = (newDate) => {
+    if (newDate.getTime() !== date.getTime() ){
+      setDate(newDate)
+    }
+  }
+
+  // Preparing output string
+  const isoCode = locale || navigator.language  
+  const dayOptions = {
+    weekday: "long",
+    timeZone
+  }
+  const dayName = date.toLocaleString(isoCode, dayOptions)
+  const dateString = date.toLocaleTimeString(isoCode, timeZone)
+
+  timeZone = timeZone
+           ? ` (${timeZone})`
+           : ""
+
+  const output = `${dayName} ${dateString}${timeZone}`
+
 
   return (
     <>
-      <TimePicker
-        // Selectors
-        locale={locale}
-        bgColor={bgColor}
-        weekday={weekday}
-        weekAlign={weekAlign}
-        minutesInterval={minutesInterval}
-        // Sliders
-        radius={radius}
-        spacing={spacing}
-        fontSize={fontSize}
+      <div
+        style={{
+          flex: 1
+        }}
+      >
+        <TimePicker
+          // I/O
+          date={date}
+          onChange={onChange}
 
-        // Cylinders to show
-        display={items}
+          // Selectors
+          locale={locale}
+          bgColor={bgColor}
+          weekday={weekday}
+          weekAlign={weekAlign}
 
-        // Development aid
-        verbose={false}
-      />
+          // Sliders
+          minutesInterval={minutesInterval}
+          radius={radius}
+          spacing={spacing}
+          fontSize={fontSize}
+
+          // Cylinders to show
+          display={items}
+          // Feedback during development
+          // verbose ={true}
+        />
+        <p
+          style={{textAlign: "center", fontSize: "4.5vmin"}}
+        >
+          {output}
+        </p>
+      </div>
 
       <Toolbar
         children={[

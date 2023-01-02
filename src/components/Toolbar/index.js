@@ -10,11 +10,9 @@ const Toolbar = ({ children }) => {
   return (
     <div
       style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        width: "100vw",
+        height: "100vh",
         display: "flex",
+        flexDirection: "column",
         justifyContent: "space-around",
       }}
     >

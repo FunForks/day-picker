@@ -43,6 +43,11 @@ const Selector = ({ attribute, options, value, setValue }) => {
   })
 
 
+  if (value && !isNaN(Number(value))) {
+    value = Number(value).toFixed(2)
+  }  
+
+
   return (
     <label>
       <span

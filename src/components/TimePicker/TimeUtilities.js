@@ -8,17 +8,23 @@
 
 
 /**
- * Create an array of localized weekday names, starting with today
+ * Create an array of localized weekday names, starting with Sunday
+ *
+ * locale should be an ISO code such as "en-GB"
+ * format should be { weekday: <"long"|"short"|"narrow"> }
  */
 export const getWeekdayNames = (locale, format) => {
   let date       = new Date()
   const msInDay  = 24 * 60 * 60 * 1000
 
-  const weekdays = Array(7).fill(0).map(() => {
+  const weekdays = []
+
+  for ( let ii = 0; ii < 7; ii += 1 ) {
     const weekday = date.toLocaleString(locale, format)
+    const index = date.getDay()
+    weekdays[index] = weekday
     date = new Date(date.getTime() + msInDay)
-    return weekday
-  })
+  }
 
   return weekdays
 }
