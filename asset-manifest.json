@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/day-picker/static/css/main.b1520b00.css",
-    "main.js": "/day-picker/static/js/main.d4f978d3.js",
+    "main.css": "/day-picker/static/css/main.a536afbe.css",
+    "main.js": "/day-picker/static/js/main.1a72b78e.js",
     "index.html": "/day-picker/index.html",
-    "main.b1520b00.css.map": "/day-picker/static/css/main.b1520b00.css.map",
-    "main.d4f978d3.js.map": "/day-picker/static/js/main.d4f978d3.js.map"
+    "main.a536afbe.css.map": "/day-picker/static/css/main.a536afbe.css.map",
+    "main.1a72b78e.js.map": "/day-picker/static/js/main.1a72b78e.js.map"
   },
   "entrypoints": [
-    "static/css/main.b1520b00.css",
-    "static/js/main.d4f978d3.js"
+    "static/css/main.a536afbe.css",
+    "static/js/main.1a72b78e.js"
   ]
 }
